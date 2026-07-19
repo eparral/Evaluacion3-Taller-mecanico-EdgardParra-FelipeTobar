@@ -5,10 +5,8 @@ Sistema de consola para gestionar clientes, vehículos y servicios de un taller 
 
 ## Integrantes
 
-- Nombre Apellido 1
-- Nombre Apellido 2
-
-> Reemplazar los nombres antes de publicar el repositorio.
+- Edgard Parra
+- Felipe Tobar
 
 ## Requisitos
 
@@ -19,8 +17,8 @@ Sistema de consola para gestionar clientes, vehículos y servicios de un taller 
 ## Instalación y ejecución
 
 ```bash
-git clone URL_DEL_REPOSITORIO
-cd NOMBRE_DE_LA_CARPETA
+git clone https://github.com/eparral/Evaluacion3-Taller-mecanico-EdgardParra-FelipeTobar.git
+cd Evaluacion3-Taller-mecanico-EdgardParra-FelipeTobar
 python -m venv .venv
 ```
 
@@ -84,6 +82,6 @@ Cada cliente contiene:
 La entrega en el Ambiente de Aprendizaje es un archivo `.txt` que contenga la URL pública del repositorio y el nombre exacto de la rama utilizada, por ejemplo:
 
 ```text
-URL: https://github.com/usuario/taller-mecanico-mongodb
+URL: https://github.com/eparral/Evaluacion3-Taller-mecanico-EdgardParra-FelipeTobar
 Rama: main
 ```
