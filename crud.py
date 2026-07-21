@@ -1,16 +1,7 @@
-"""
-Operaciones CRUD y pipeline de agregación para el sistema
-del Taller Mecánico.
-"""
 from datetime import datetime, timedelta
 
 
-# ---------------------------------------------------------------------------
-# Utilidades
-# ---------------------------------------------------------------------------
-
 def _pedir_fecha(mensaje):
-    """Solicita una fecha en formato DD-MM-AAAA y la retorna como datetime."""
     while True:
         texto = input(mensaje).strip()
         try:
@@ -28,22 +19,22 @@ def _pedir_numero(mensaje, tipo=float):
             print("Debe ingresar un número válido.")
 
 
-def _imprimir_documento(doc):
+def _imprimir_documento(cliente):
     print("-" * 60)
-    print(f"ID: {doc.get('_id')}")
-    print(f"Cliente: {doc.get('nombre_cliente')} | RUT: {doc.get('rut_cliente')}")
-    print(f"Teléfono: {doc.get('telefono')} | Email: {doc.get('email')}")
-    veh = doc.get("vehiculo", {})
-    print(f"Vehículo: {veh.get('marca')} {veh.get('modelo')} ({veh.get('anio')}) "
-          f"- Patente: {veh.get('patente')} - Color: {veh.get('color')}")
-    print(f"Fecha de registro: {doc.get('fecha_registro')}")
-    historial = doc.get("historial_servicios", [])
+    print(f"ID: {cliente.get('_id')}")
+    print(f"Cliente: {cliente.get('nombre_cliente')} | RUT: {cliente.get('rut_cliente')}")
+    print(f"Teléfono: {cliente.get('telefono')} | Email: {cliente.get('email')}")
+    vehiculo = cliente.get("vehiculo", {})
+    print(f"Vehículo: {vehiculo.get('marca')} {vehiculo.get('modelo')} ({vehiculo.get('anio')}) "
+          f"- Patente: {vehiculo.get('patente')} - Color: {vehiculo.get('color')}")
+    print(f"Fecha de registro: {cliente.get('fecha_registro')}")
+    historial = cliente.get("historial_servicios", [])
     if historial:
         print("Historial de servicios:")
-        for i, serv in enumerate(historial, start=1):
-            print(f"  {i}. [{serv.get('fecha_servicio')}] {serv.get('tipo_servicio')} "
-                  f"- {serv.get('descripcion')} - ${serv.get('costo')} "
-                  f"- Mecánico: {serv.get('mecanico_asignado')} - Estado: {serv.get('estado')}")
+        for numero, servicio in enumerate(historial, start=1):
+            print(f"  {numero}. [{servicio.get('fecha_servicio')}] {servicio.get('tipo_servicio')} "
+                  f"- {servicio.get('descripcion')} - ${servicio.get('costo')} "
+                  f"- Mecánico: {servicio.get('mecanico_asignado')} - Estado: {servicio.get('estado')}")
     print("-" * 60)
 
 
@@ -52,14 +43,10 @@ def _imprimir_lista(cursor):
     if not documentos:
         print("No se encontraron documentos.")
         return
-    for doc in documentos:
-        _imprimir_documento(doc)
+    for cliente in documentos:
+        _imprimir_documento(cliente)
     print(f"Total de documentos encontrados: {len(documentos)}")
 
-
-# ---------------------------------------------------------------------------
-# 1. CREATE
-# ---------------------------------------------------------------------------
 
 def crear_cliente(coleccion):
     print("\n--- Crear nuevo cliente ---")
@@ -112,19 +99,11 @@ def crear_cliente(coleccion):
     print(f"\nCliente creado correctamente. ID insertado: {resultado.inserted_id}")
 
 
-# ---------------------------------------------------------------------------
-# 2. LISTAR (Read básico)
-# ---------------------------------------------------------------------------
-
 def listar_clientes(coleccion):
     print("\n--- Listado completo de clientes ---")
     cursor = coleccion.find({})
     _imprimir_lista(cursor)
 
-
-# ---------------------------------------------------------------------------
-# 3. BUSCAR con operador de comparación (Read básico)
-# ---------------------------------------------------------------------------
 
 def buscar_por_comparacion(coleccion):
     print("\n--- Buscar con operador de comparación ---")
@@ -136,13 +115,13 @@ def buscar_por_comparacion(coleccion):
         "1": "$gt", "2": "$lt", "3": "$gte", "4": "$lte", "5": "$ne", "6": "$in"
     }
     print("Operadores disponibles: 1) $gt 2) $lt 3) $gte 4) $lte 5) $ne 6) $in")
-    op_key = input("Seleccione el operador: ").strip()
-    operador = operadores.get(op_key, "$gt")
+    opcion_operador = input("Seleccione el operador: ").strip()
+    operador = operadores.get(opcion_operador, "$gt")
 
     if opcion == "1":
         valor = int(_pedir_numero("Ingrese el año a comparar: ", int))
         if operador == "$in":
-            valor = [valor, valor + 1]  # ejemplo simple de lista para $in
+            valor = [valor, valor + 1]
         filtro = {"vehiculo.anio": {operador: valor}}
         proyeccion = {"nombre_cliente": 1, "vehiculo": 1, "_id": 0}
         cursor = coleccion.find(filtro, proyeccion)
@@ -155,13 +134,9 @@ def buscar_por_comparacion(coleccion):
         cursor = coleccion.find(filtro, proyeccion)
 
     print(f"\nResultados con filtro: {filtro}")
-    for doc in cursor:
-        print(doc)
+    for cliente in cursor:
+        print(cliente)
 
-
-# ---------------------------------------------------------------------------
-# 4. BUSCAR con expresión regular (Read avanzado)
-# ---------------------------------------------------------------------------
 
 def buscar_por_regex(coleccion):
     print("\n--- Buscar con expresión regular ---")
@@ -180,10 +155,6 @@ def buscar_por_regex(coleccion):
     _imprimir_lista(cursor)
 
 
-# ---------------------------------------------------------------------------
-# 5. BUSCAR por rango de fechas (Read avanzado)
-# ---------------------------------------------------------------------------
-
 def buscar_por_rango_fechas(coleccion):
     print("\n--- Buscar por rango de fechas (fecha de registro) ---")
     fecha_inicio = _pedir_fecha("Fecha de inicio (DD-MM-AAAA): ")
@@ -192,7 +163,6 @@ def buscar_por_rango_fechas(coleccion):
         print("La fecha final no puede ser anterior a la fecha inicial.")
         return
 
-    # El límite exclusivo del día siguiente incluye todas las horas del día final.
     filtro = {
         "fecha_registro": {
             "$gte": fecha_inicio,
@@ -202,10 +172,6 @@ def buscar_por_rango_fechas(coleccion):
     cursor = coleccion.find(filtro)
     _imprimir_lista(cursor)
 
-
-# ---------------------------------------------------------------------------
-# 6. BUSCAR dentro de subdocumento o array (Read avanzado)
-# ---------------------------------------------------------------------------
 
 def buscar_en_subdocumento(coleccion):
     print("\n--- Buscar dentro de subdocumento o array ---")
@@ -224,20 +190,16 @@ def buscar_en_subdocumento(coleccion):
     _imprimir_lista(cursor)
 
 
-# ---------------------------------------------------------------------------
-# 7. ACTUALIZAR campo del documento raíz (Update)
-# ---------------------------------------------------------------------------
-
 def actualizar_campo_raiz(coleccion):
     print("\n--- Actualizar campo del documento raíz ---")
     rut = input("Ingrese el RUT del cliente a actualizar: ").strip()
-    doc = coleccion.find_one({"rut_cliente": rut})
-    if not doc:
+    cliente = coleccion.find_one({"rut_cliente": rut})
+    if not cliente:
         print("No se encontró un cliente con ese RUT.")
         return
 
     print("Documento antes de la actualización:")
-    _imprimir_documento(doc)
+    _imprimir_documento(cliente)
 
     print("Campos editables: telefono, email")
     campo = input("¿Qué campo desea actualizar?: ").strip()
@@ -252,15 +214,11 @@ def actualizar_campo_raiz(coleccion):
     _imprimir_documento(doc_actualizado)
 
 
-# ---------------------------------------------------------------------------
-# 8. ACTUALIZAR dentro de subdocumento o array (Update)
-# ---------------------------------------------------------------------------
-
 def actualizar_subdocumento_o_array(coleccion):
     print("\n--- Actualizar dentro de subdocumento o array ---")
     rut = input("Ingrese el RUT del cliente a actualizar: ").strip()
-    doc = coleccion.find_one({"rut_cliente": rut})
-    if not doc:
+    cliente = coleccion.find_one({"rut_cliente": rut})
+    if not cliente:
         print("No se encontró un cliente con ese RUT.")
         return
 
@@ -270,7 +228,7 @@ def actualizar_subdocumento_o_array(coleccion):
     opcion = input("Seleccione una opción: ").strip()
 
     print("Documento antes de la actualización:")
-    _imprimir_documento(doc)
+    _imprimir_documento(cliente)
 
     if opcion == "1":
         nuevo_color = input("Nuevo color del vehículo: ").strip()
@@ -313,20 +271,16 @@ def actualizar_subdocumento_o_array(coleccion):
     _imprimir_documento(doc_actualizado)
 
 
-# ---------------------------------------------------------------------------
-# 9. ELIMINAR con condición específica (Delete)
-# ---------------------------------------------------------------------------
-
 def eliminar_documento(coleccion):
     print("\n--- Eliminar cliente ---")
     rut = input("Ingrese el RUT del cliente a eliminar: ").strip()
-    doc = coleccion.find_one({"rut_cliente": rut})
-    if not doc:
+    cliente = coleccion.find_one({"rut_cliente": rut})
+    if not cliente:
         print("No se encontró un cliente con ese RUT.")
         return
 
     print("Documento que será eliminado:")
-    _imprimir_documento(doc)
+    _imprimir_documento(cliente)
     confirmacion = input("¿Confirma la eliminación? (S/N): ").strip().upper()
     if confirmacion == "S":
         resultado = coleccion.delete_one({"rut_cliente": rut})
@@ -334,10 +288,6 @@ def eliminar_documento(coleccion):
     else:
         print("Operación cancelada.")
 
-
-# ---------------------------------------------------------------------------
-# 10. REPORTE con pipeline de agregación
-# ---------------------------------------------------------------------------
 
 def reporte_agregacion(coleccion):
     print("\n--- Reporte: total facturado y cantidad de servicios por mecánico ---")
@@ -361,5 +311,9 @@ def reporte_agregacion(coleccion):
 
     print(f"{'Mecánico':<20}{'Total facturado':<20}{'N° servicios':<15}")
     print("-" * 55)
-    for r in resultados:
-        print(f"{r['_id']:<20}${r['total_facturado']:<19}{r['cantidad_servicios']:<15}")
+    for resultado in resultados:
+        print(
+            f"{resultado['_id']:<20}"
+            f"${resultado['total_facturado']:<19}"
+            f"{resultado['cantidad_servicios']:<15}"
+        )
