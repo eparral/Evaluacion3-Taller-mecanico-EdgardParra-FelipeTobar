@@ -1,7 +1,3 @@
-"""
-Datos de precarga para la colección 'clientes'.
-Cumple con el requisito de mínimo 8 documentos precargados.
-"""
 from datetime import datetime
 
 
