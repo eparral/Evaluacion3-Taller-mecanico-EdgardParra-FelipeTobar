@@ -1,10 +1,3 @@
-"""
-Sistema CRUD - Taller Mecánico
-Evaluación Unidad Integradora N°3 - Bases de Datos No Estructuradas
-
-Ejecutar con: python main.py
-Requiere una instancia de MongoDB corriendo en localhost:27017
-"""
 from pymongo.errors import ServerSelectionTimeoutError
 
 from db import obtener_coleccion
@@ -24,7 +17,6 @@ from crud import (
 
 
 def precargar_datos_si_esta_vacia(coleccion):
-    """Inserta los documentos de ejemplo solo si la colección está vacía."""
     if coleccion.count_documents({}) == 0:
         datos = generar_datos_precarga()
         coleccion.insert_many(datos)
